@@ -1,10 +1,13 @@
 import os
 import azure.functions as func
 import logging
-import psycopg2
+from azure.cosmos import CosmosClient
+
+COSMOSDB_URL = os.getenv("COSMOSDB_URL")
+COSMOSDB_KEY = os.getenv("COSMOSDB_KEY")
 
 app = func.FunctionApp()
-con = psycopg2.connect(os.getenv("DATABASE_URL"))
+client = CosmosClient(COSMOSDB_URL, credential=COSMOSDB_KEY)
 
 
 @app.event_hub_message_trigger(
@@ -17,12 +20,4 @@ def eventhub_trigger1(azeventhub: func.EventHubEvent):
         "Python EventHub trigger processed an event: %s",
         azeventhub.get_body().decode("utf-8"),
     )
-    with con:
-        with con.cursor() as cur:
-            cur.execute("SELECT * FROM books LIMIT 10")
-            rows = cur.fetchall()
-            logging.info("The number of books: %s", len(rows))
-            cur.execute(
-                "INSERT INTO messages (message) VALUES (%s)",
-                (azeventhub.get_body().decode("utf-8"),),
-            )
+    
