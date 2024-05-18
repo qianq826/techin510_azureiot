@@ -4,21 +4,20 @@ import uuid
 
 import azure.functions as func
 import logging
-from azure.cosmos import CosmosClient
+import psycopg2
 
-COSMOSDB_URL = os.getenv("COSMOSDB_URL")
-COSMOSDB_KEY = os.getenv("COSMOSDB_KEY")
-COSMOSDB_DATABASE = os.getenv("COSMOSDB_DATABASE")
-COSMOSDB_CONTAINER = os.getenv("COSMOSDB_CONTAINER")
+DATABASE_URL = os.getenv("DATABASE_URL")
+EVENT_HUB_NAME = os.getenv("EVENT_HUB_NAME")
+IOTHUB_CONNECTION_STRING_NAME = os.getenv("IOTHUB_CONNECTION_STRING_NAME")
 
 app = func.FunctionApp()
-client = CosmosClient(COSMOSDB_URL, credential=COSMOSDB_KEY)
+client = psycopg2.connect(DATABASE_URL)
 
 
 @app.event_hub_message_trigger(
     arg_name="azeventhub",
-    event_hub_name="iothub-ehub-techin510-59467401-6d881a7ae1",  # FIXME: Change to your own iothub event_hub_name
-    connection="IOTHUB_CONNECTION_STRING",  # Remember to add the IOTHUB_CONNECTION_STRING environment variable in your Function App
+    event_hub_name=EVENT_HUB_NAME,  # FIXME: Change to your own iothub event_hub_name
+    connection=IOTHUB_CONNECTION_STRING_NAME,  # Remember to add the IOTHUB_CONNECTION_STRING environment variable in your Function App
 )
 def eventhub_trigger1(azeventhub: func.EventHubEvent):
     logging.info(
@@ -29,9 +28,3 @@ def eventhub_trigger1(azeventhub: func.EventHubEvent):
     msg = json.loads(azeventhub.get_body().decode("utf-8"))
     msg["id"] = str(uuid.uuid4())
     logging.info(f"Message: {msg.get('device_id')}")
-
-    (
-        client.get_database_client(COSMOSDB_DATABASE)
-        .get_container_client(COSMOSDB_CONTAINER)
-        .upsert_item(msg)
-    )

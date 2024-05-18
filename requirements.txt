@@ -1,2 +1,2 @@
 azure-functions
-azure-cosmos
+psycopg2-binary
