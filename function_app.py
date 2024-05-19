@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import datetime
 
 import azure.functions as func
 import logging
@@ -11,7 +12,7 @@ EVENT_HUB_NAME = os.getenv("EVENT_HUB_NAME")
 IOTHUB_CONNECTION_STRING_NAME = os.getenv("IOTHUB_CONNECTION_STRING_NAME")
 
 app = func.FunctionApp()
-client = psycopg2.connect(DATABASE_URL)
+con = psycopg2.connect(DATABASE_URL)
 
 
 @app.event_hub_message_trigger(
@@ -28,3 +29,16 @@ def eventhub_trigger1(azeventhub: func.EventHubEvent):
     msg = json.loads(azeventhub.get_body().decode("utf-8"))
     msg["id"] = str(uuid.uuid4())
     logging.info(f"Message: {msg.get('device_id')}")
+
+    with con:
+        with con.cursor() as cur:
+            # cur.execute("""CREATE TABLE IF NOT EXISTS temperature (id UUID PRIMARY KEY, device_id TEXT, temperature FLOAT, created_at TIMESTAMP)""")
+            cur.execute(
+                """INSERT INTO temperature (id, device_id, temperature, created_at) VALUES (%s, %s, %s, %s)""",
+                (
+                    msg["id"],
+                    msg["device_id"],
+                    msg["temperature"],
+                    datetime.datetime.now(),
+                ),
+            )
