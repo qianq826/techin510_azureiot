@@ -32,7 +32,7 @@ def eventhub_trigger1(azeventhub: func.EventHubEvent):
 
     with con:
         with con.cursor() as cur:
-            # cur.execute("""CREATE TABLE IF NOT EXISTS temperature (id UUID PRIMARY KEY, device_id TEXT, temperature FLOAT, created_at TIMESTAMP)""")
+            cur.execute("""CREATE TABLE IF NOT EXISTS temperature (id UUID PRIMARY KEY, device_id TEXT, temperature FLOAT, created_at TIMESTAMP)""")
             cur.execute(
                 """INSERT INTO temperature (id, device_id, temperature, created_at) VALUES (%s, %s, %s, %s)""",
                 (
